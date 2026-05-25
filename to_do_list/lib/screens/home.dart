@@ -11,6 +11,38 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  void _searchItem(String enteredKeyword) {
+    List<Todo> results = [];
+
+    if (enteredKeyword.isEmpty) {
+      results = todosList;
+    } else {
+      results = todosList
+          .where(
+            (item) => item.todoText!.toLowerCase().contains(
+              enteredKeyword.toLowerCase(),
+            ),
+          )
+          .toList();
+    }
+
+    setState(() {
+      _searchTodo = results;
+    });
+  }
+
+  void _addToDoItem(String toDo) {
+    setState(() {
+      todosList.add(
+        Todo(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          todoText: toDo,
+        ),
+      );
+    });
+    _todoController.clear();
+  }
+
   void _handleToDoChange(Todo todo) {
     setState(() {
       todo.isDone = !todo.isDone;
@@ -24,6 +56,14 @@ class _HomeState extends State<Home> {
   }
 
   final todosList = Todo.todoList();
+  final _todoController = TextEditingController();
+  List<Todo> _searchTodo = [];
+
+  @override
+  void initState() {
+    _searchTodo = todosList;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +90,7 @@ class _HomeState extends State<Home> {
                           ),
                         ),
                       ),
-                      for (Todo todo in todosList)
+                      for (Todo todo in _searchTodo.reversed)
                         TodoItem(
                           todo: todo,
                           onToDoChanged: _handleToDoChange,
@@ -89,8 +129,9 @@ class _HomeState extends State<Home> {
                       ],
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    child: const TextField(
-                      decoration: InputDecoration(
+                    child: TextField(
+                      controller: _todoController,
+                      decoration: const InputDecoration(
                         hintText: 'add a new todo item',
                         border: InputBorder.none,
                       ),
@@ -100,7 +141,9 @@ class _HomeState extends State<Home> {
                 Container(
                   margin: const EdgeInsets.only(bottom: 20, right: 20),
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      _addToDoItem(_todoController.text);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: tdBlue,
                       minimumSize: const Size(60, 60),
@@ -127,8 +170,9 @@ class _HomeState extends State<Home> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const TextField(
-        decoration: InputDecoration(
+      child: TextField(
+        onChanged: (value) => _searchItem(value),
+        decoration: const InputDecoration(
           contentPadding: EdgeInsets.all(0),
           prefixIcon: Icon(Icons.search, color: tdBlack, size: 20),
           prefixIconConstraints: BoxConstraints(maxHeight: 20, minWidth: 25),
